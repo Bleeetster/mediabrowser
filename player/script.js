@@ -31,6 +31,7 @@ async function playMediaFile() {
   // TODO connect to backend endpoint
 
   // using mockfile for now;
+  // No you dumbass
   const mediaInfo = await fetch("/api/mediainfo?file=" + encodeURIComponent(currentFilename()))
 
   if (mediaInfo.type === "video") {
@@ -54,7 +55,7 @@ async function loadAllMedia() {
     console.error(error)
     throw Error("COULD_NOT_FETCH_FROM_BACKEND")
   }
-  sessionStorage.setItem(mediaDirectory)
+  sessionStorage.setItem("mediaDirectory", mediaDirectory)
 }
 
 function findMediaFileInArray() {
@@ -81,6 +82,17 @@ function goNext() {
   window.location.search = query.toString();
   playMediaFile()
 }
+function goPrevious() {
+  const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"));
+  if (currentIndex <= 0) return;
+  currentIndex -= 1
+  const mediaFileName = mediaTree[currentIndex]
+  const search = window.location.search;
+  let query = new URLSearchParams(search)
+  query.set("watch", encodeURIComponent(mediaFileName))
+  window.location.search = query.toString();
+  playMediaFile()
+}
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -88,4 +100,5 @@ document.addEventListener("DOMContentLoaded", () => {
   currentIndex = findMediaFileInArray();
   playMediaFile();
   nextButton.addEventListener("click", goNext)
+  previousButton.addEventListener("click", goPrevious)
 })

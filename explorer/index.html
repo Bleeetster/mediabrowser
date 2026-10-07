@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Media Browser Explorer</title>
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ==================== SIDEBAR: история просмотра ==================== -->
+  <aside class="sidebar">
+    <div class="sidebar__logo">
+      <div class="sidebar__logo-icon">📁</div>
+      <span>Media Server Explorer</span>
+    </div>
+
+    <p class="sidebar__section-title">Watch History</p>
+    <ul class="history">
+      <li class="history__item history__item--active">
+        <span class="history__icon">🎬</span>
+        <span class="history__name">Фильмы 2024</span>
+        <span class="history__time">сейчас</span>
+      </li>
+      <li class="history__item">
+        <span class="history__icon">🎵</span>
+        <span class="history__name">Концерт — Live</span>
+        <span class="history__time">5м</span>
+      </li>
+      <li class="history__item">
+        <span class="history__icon">📺</span>
+        <span class="history__name">Сериалы / S02</span>
+        <span class="history__time">1ч</span>
+      </li>
+      <li class="history__item">
+        <span class="history__icon">🎬</span>
+        <span class="history__name">Документалки</span>
+        <span class="history__time">вчера</span>
+      </li>
+      <li class="history__item">
+        <span class="history__icon">🖼️</span>
+        <span class="history__name">Фото / Отпуск</span>
+        <span class="history__time">2д</span>
+      </li>
+      <li class="history__item">
+        <span class="history__icon">🎵</span>
+        <span class="history__name">Подкасты</span>
+        <span class="history__time">3д</span>
+      </li>
+    </ul>
+
+    <div class="sidebar__divider"></div>
+
+    <p class="sidebar__section-title">Быстрый доступ</p>
+    <ul class="history">
+      <li class="history__item">
+        <span class="history__icon">⭐</span>
+        <span class="history__name">Избранное</span>
+      </li>
+      <li class="history__item">
+        <span class="history__icon">⬇️</span>
+        <span class="history__name">Загрузки</span>
+      </li>
+      <li class="history__item">
+        <span class="history__icon">🕒</span>
+        <span class="history__name">Недавние</span>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- ==================== HEADER: хлебные крошки ==================== -->
+  <header class="header">
+    <nav class="breadcrumbs">
+      <span class="breadcrumbs__item">🏠 Главная</span>
+      <span class="breadcrumbs__sep">/</span>
+      <span class="breadcrumbs__item">Медиа</span>
+      <span class="breadcrumbs__sep">/</span>
+      <span class="breadcrumbs__item">Фильмы</span>
+      <span class="breadcrumbs__sep">/</span>
+      <span class="breadcrumbs__item breadcrumbs__item--current">2024</span>
+    </nav>
+
+    <div class="header__actions">
+      <button class="btn-icon" title="Обновить">⟳</button>
+      <button class="btn-icon" title="Настройки">⚙</button>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN: проводник ==================== -->
+  <main class="main">
+    <div class="toolbar">
+      <h1 class="toolbar__title">
+        Фильмы 2024
+        <span class="toolbar__count">12 элементов</span>
+      </h1>
+
+      <label class="search">
+        <span>🔍</span>
+        <input type="text" placeholder="Поиск в папке…">
+      </label>
+    </div>
+
+    <ul class="files">
+      <li class="file">
+        <div class="file__icon file__icon--folder">📁</div>
+        <div class="file__name">Комедии</div>
+        <div class="file__meta">14 элементов</div>
+      </li>
+      <li class="file">
+        <div class="file__icon file__icon--folder">📁</div>
+        <div class="file__name">Драмы</div>
+        <div class="file__meta">6 элементов</div>
+      </li>
+
+      <li class="file">
+        <div class="file__icon">🎬</div>
+        <div class="file__name">Дюна — часть 2.mkv</div>
+        <div class="file__meta">2.4 ГБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">🎬</div>
+        <div class="file__name">Оппенгеймер.mp4</div>
+        <div class="file__meta">3.1 ГБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">🎬</div>
+        <div class="file__name">Бедные-несчастные.mkv</div>
+        <div class="file__meta">1.8 ГБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">🎬</div>
+        <div class="file__name">Претенденты.mp4</div>
+        <div class="file__meta">2.0 ГБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">🎬</div>
+        <div class="file__name">Субстанция.mkv</div>
+        <div class="file__meta">2.2 ГБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">🎬</div>
+        <div class="file__name">Анора.mp4</div>
+        <div class="file__meta">1.6 ГБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">🖼️</div>
+        <div class="file__name">постер.jpg</div>
+        <div class="file__meta">420 КБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">📄</div>
+        <div class="file__name">описание.txt</div>
+        <div class="file__meta">2 КБ</div>
+      </li>
+      <li class="file">
+        <div class="file__icon">📄</div>
+        <div class="file__name">субтитры.srt</div>
+        <div class="file__meta">34 КБ</div>
+      </li>
+    </ul>
+  </main>
+
+</body>
+  <script src="./script.js"></script>
+</html>

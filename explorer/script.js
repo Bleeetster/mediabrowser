@@ -3,6 +3,7 @@
 // -> 
 // make watch history column
 // make explorer itself
+
 const filesDiv = document.getElementsByClassName("files")[0];
 const breadcrumbsNav = document.getElementsByClassName("breadcrumbs")[0]
 
@@ -71,13 +72,12 @@ const mockEntry1 = {
 }
 
 function makeEntriesFromCurrentDir() {
-  // const mediaDirectory = sessionStorage.getItem("mediaDirectory")
-  const mediaDirectory = new Array("/media/file.mp4", "/file.mp4", "/media/another/wowSoMuchMedia/supersecretphoto.jpeg", "/file2.mp4", "/photo.jpeg")
+  const mediaDirectory = sessionStorage.getItem("mediaDirectory")
+  // const mediaDirectory = new Array("/media/file.mp4", "/file.mp4", "/media/another/wowSoMuchMedia/supersecretphoto.jpeg", "/file2.mp4", "/photo.jpeg")
   const currentDirectory = getCurrentDirectory()
   const filesFromCurrentDirectory = mediaDirectory.filter(file => file.startsWith(currentDirectory))
   const dirMap = new Map()
   const fileMap = new Map()
-  let relativePath
   let currentDir = currentDirectory
   filesFromCurrentDirectory.forEach(file => {
     if (currentDirectory != "/") {
@@ -120,7 +120,7 @@ function renderEntries() {
   filesDiv.replaceChildren();
   const entries = makeEntriesFromCurrentDir();
   for (let entry of entries) {
-    const entryElement = document.createElement("li");
+    const entryElement = document.createElement("a");
     entryElement.className = "file"
     const entryIconElement = document.createElement("div")
     entryIconElement.className = "file__icon"
@@ -149,13 +149,9 @@ function renderEntries() {
     filesDiv.appendChild(entryElement)
     if (entry.type === "directory") entryElement.addEventListener("click", () => { goTo(entry.path) })
     else (
-      entryElement.addEventListener('click', () => { play(entry.path) })
+      entryElement.href = "player?watch=" + encodeURIComponent(entry.path)
     )
   }
-}
-
-function play(filename) {
-  window.location.href = "/home/bleeetster/mediabrowser/player/index.html?watch=" + encodeURIComponent(filename);
 }
 
 function goTo(directory) {
@@ -171,6 +167,7 @@ function refresh() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+  loadAllMedia()
   renderEntries()
   renderBreadcrumbs()
 })

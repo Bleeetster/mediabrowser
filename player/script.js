@@ -1,3 +1,5 @@
+import { apiFormater } from "/api/apiFormater.js";
+const api = new apiFormater()
 // buttons
 const backButton = document.getElementsByClassName("btn-back")[0];
 const nextButton = document.getElementsByClassName("btn-next")[0];
@@ -32,7 +34,7 @@ async function playMediaFile() {
 
   // using mockfile for now;
   // No you dumbass
-  const mediaInfo = await fetch("/api/mediainfo?file=" + encodeURIComponent(currentFilename()))
+  const mediaInfo = await api.getMediaInfo(currentFilename())
 
   if (mediaInfo.type === "video") {
     const video = document.createElement('video');
@@ -49,13 +51,8 @@ async function playMediaFile() {
 
 
 async function loadAllMedia() {
-  try {
-    const mediaDirectory = await fetch("/api/loadMedia")
-  } catch (error) {
-    console.error(error)
-    throw Error("COULD_NOT_FETCH_FROM_BACKEND")
-  }
-  sessionStorage.setItem("mediaDirectory", mediaDirectory)
+  const mediaDirectory = await api.loadAllMedia()
+  sessionStorage.setItem("mediaDirectory", JSON.stringify(mediaDirectory))
 }
 
 function findMediaFileInArray() {
@@ -94,9 +91,8 @@ function goPrevious() {
   playMediaFile()
 }
 
-
-document.addEventListener("DOMContentLoaded", () => {
-  sessionStorage.setItem("mediaDirectory", JSON.stringify(new Array("/media/file.mp4", "/file.mp4", "/media/another/wowSoMuchMedia/supersecretphoto.jpeg")))
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadAllMedia()
   currentIndex = findMediaFileInArray();
   playMediaFile();
   nextButton.addEventListener("click", goNext)

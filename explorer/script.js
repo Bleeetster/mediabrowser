@@ -1,11 +1,8 @@
-// make breadcrumbs
-// -> fetch current directory
-// -> 
-// make watch history column
-// make explorer itself
+import { apiFormater } from "/api/apiFormater.js";
 
 const filesDiv = document.getElementsByClassName("files")[0];
 const breadcrumbsNav = document.getElementsByClassName("breadcrumbs")[0]
+const api = new apiFormater()
 
 function renderBreadcrumbs() {
   breadcrumbsNav.replaceChildren()
@@ -43,13 +40,9 @@ function renderBreadcrumbs() {
 }
 
 async function loadAllMedia() {
-  try {
-    const mediaDirectory = await fetch("/api/loadMedia")
-  } catch (error) {
-    console.error(error)
-    throw Error("COULD_NOT_FETCH_FROM_BACKEND")
-  }
-  sessionStorage.setItem("mediaDirectory", mediaDirectory)
+  const mediaDirectory = await api.loadAllMedia()
+  const MDjson = JSON.stringify(mediaDirectory)
+  sessionStorage.setItem("mediaDirectory", MDjson)
 }
 
 function getCurrentDirectory() {
@@ -72,12 +65,15 @@ const mockEntry1 = {
 }
 
 function makeEntriesFromCurrentDir() {
-  const mediaDirectory = sessionStorage.getItem("mediaDirectory")
+  const mediaDirectoryRaw = sessionStorage.getItem("mediaDirectory")
+  const mediaDirectory = JSON.parse(mediaDirectoryRaw)
+  console.log(mediaDirectory)
   // const mediaDirectory = new Array("/media/file.mp4", "/file.mp4", "/media/another/wowSoMuchMedia/supersecretphoto.jpeg", "/file2.mp4", "/photo.jpeg")
   const currentDirectory = getCurrentDirectory()
   const filesFromCurrentDirectory = mediaDirectory.filter(file => file.startsWith(currentDirectory))
   const dirMap = new Map()
   const fileMap = new Map()
+  let relativeFile
   let currentDir = currentDirectory
   filesFromCurrentDirectory.forEach(file => {
     if (currentDirectory != "/") {
@@ -166,8 +162,8 @@ function refresh() {
 }
 
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadAllMedia()
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadAllMedia()
   renderEntries()
   renderBreadcrumbs()
 })

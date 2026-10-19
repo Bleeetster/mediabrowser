@@ -1,4 +1,5 @@
 from pathlib import Path
+import mimetypes
 
 
 class fileSystemControler:
@@ -16,12 +17,19 @@ class fileSystemControler:
         ]
 
     def getFileInfo(self, filename: str):
+        filename = filename.removeprefix("/")
         file_path = self.rootDir / filename
         file_stats = file_path.stat()
+        mimetype = mimetypes.guess_file_type(file_path)[0]
+        print(mimetype)
+        if mimetype is None:
+            mimetype = "None"
         stats = {
-            "Name": file_path.name,
-            "Size": file_stats.st_size,
-            "Modified": file_stats.st_mtime,
-            "Path": str("/" + str(file_path.relative_to(self.rootDir))),
+            "name": file_path.name,
+            "size": file_stats.st_size,
+            "modified": file_stats.st_mtime,
+            "path": str("/" + str(file_path.relative_to(self.rootDir))),
+            "relPath": str(self.rootDir / file_path.relative_to(self.rootDir)),
+            "type": mimetype,
         }
         return stats

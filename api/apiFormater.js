@@ -20,8 +20,6 @@ export class apiFormater {
     }
   }
   async getMediaInfo(path) {
-    path = path.slice(1); // removing first "/"
-
     const url = '/api/mediainfo?file=' + encodeURIComponent(path)
     try {
       const res = await fetch(url)
@@ -30,7 +28,8 @@ export class apiFormater {
         name: stats.name,
         size: stats.size,
         modified: stats.modified,
-        path: stats.path
+        path: stats.path,
+        type: stats.type
       }
       return fileStats
     } catch (error) {

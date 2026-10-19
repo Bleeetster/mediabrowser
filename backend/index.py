@@ -1,7 +1,7 @@
 import fastapi
-import json
 from filesystem import fileSystemControler
 from pydantic import BaseModel
+import fastapi.responses
 
 app = fastapi.FastAPI()
 
@@ -21,6 +21,7 @@ class mediaInfo(BaseModel):
     size: int
     modified: float
     path: str
+    type: str
 
 
 @app.get("/api/mediainfo")
@@ -28,10 +29,11 @@ async def mediainfo(file):
     stats = fs_controler.getFileInfo(file)
     print(stats)
     output = mediaInfo(
-        name=stats["Name"],
-        size=stats["Size"],
-        modified=stats["Modified"],
-        path=stats["Path"],
+        name=stats["name"],
+        size=stats["size"],
+        modified=stats["modified"],
+        path=stats["path"],
+        type=stats["type"],
     )
     return output
 
@@ -42,3 +44,10 @@ async def loadMedia():
     mediaObj = allMedia(files=media)
     print(mediaObj)
     return mediaObj
+
+
+@app.get("/api/media")
+async def media(file):
+    fileinfo = fs_controler.getFileInfo(file)
+    payload = fastapi.responses.FileResponse(path=fileinfo["relPath"])
+    return payload

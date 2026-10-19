@@ -36,14 +36,18 @@ async function playMediaFile() {
   // No you dumbass
   const mediaInfo = await api.getMediaInfo(currentFilename())
 
-  if (mediaInfo.type === "video") {
+  if (mediaInfo.type.includes("video")) {
     const video = document.createElement('video');
-    video.src = '/api/media?file=' + encodeURIComponent(mediaInfo.name)
+    video.controls = true;
+    video.autoplay = true;
+    video.defaultMuted = false;
+    video.loop = true;
+    video.src = '/api/media?file=' + encodeURIComponent(mediaInfo.path)
     mediaContainer.replaceChildren(video)
   }
   else {
     const image = document.createElement('img')
-    image.src = '/api/media?file=' + encodeURIComponent(mediaInfo.name)
+    image.src = '/api/media?file=' + encodeURIComponent(mediaInfo.path)
     mediaContainer.replaceChildren(image)
   }
 }

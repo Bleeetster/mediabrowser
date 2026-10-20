@@ -64,7 +64,7 @@ const mockEntry1 = {
   }
 }
 
-function makeEntriesFromCurrentDir() {
+async function makeEntriesFromCurrentDir() {
   const mediaDirectoryRaw = sessionStorage.getItem("mediaDirectory")
   const mediaDirectory = JSON.parse(mediaDirectoryRaw)
   console.log(mediaDirectory)
@@ -75,15 +75,15 @@ function makeEntriesFromCurrentDir() {
   const fileMap = new Map()
   let relativeFile
   let currentDir = currentDirectory
-  filesFromCurrentDirectory.forEach(file => {
+  for (const file of filesFromCurrentDirectory) {
     if (currentDirectory != "/") {
       relativeFile = file.slice(currentDirectory.length)
       currentDir = currentDirectory + "/"
     }
     else
       relativeFile = file
-    console.log(relativeFile)
     const partsOfName = relativeFile.split("/")
+    const fileinfo = await api.getMediaInfo(file)
     if (relativeFile.includes("/", 1)) { // removing first /
       const dir = {
         name: partsOfName[1],
@@ -97,24 +97,35 @@ function makeEntriesFromCurrentDir() {
       dirMap.set(dir.name, dir)
     }
     else {
+      console.log(fileinfo)
+      let size = fileinfo.size
+      const ending = ["B", "kB", "MB", "GB"]
+      let type = 0
+      while (size > 1024 & type < 5) {
+        size /= 1024
+        type += 1
+      }
+      size = String(size).slice(0, 6).padEnd(6)
+      size = `${size} ${ending[type]}`
+      console.log(size)
       const f = {
         name: partsOfName[1],
         path: currentDir + partsOfName[1],
         type: "media",
         meta: {
-          size: 123, // add size from backend
-          thumbnail: "photo" // add thumbnail from backend
+          size: size, // add size from backend
+          thumbnail: "/api/thumbnail?file=" + encodeURIComponent(fileinfo.path) // add thumbnail from backend
         }
       }
       fileMap.set(f.name, f)
     }
-  })
+  }
   return new Array(...dirMap.values(), ...fileMap.values())
 }
 
-function renderEntries() {
+async function renderEntries() {
   filesDiv.replaceChildren();
-  const entries = makeEntriesFromCurrentDir();
+  const entries = await makeEntriesFromCurrentDir();
   for (let entry of entries) {
     const entryElement = document.createElement("a");
     entryElement.className = "file"
@@ -152,18 +163,16 @@ function renderEntries() {
 
 function goTo(directory) {
   sessionStorage.setItem("CurrentDirectory", directory);
-  renderEntries()
-  renderBreadcrumbs()
+  refresh()
 }
 
-function refresh() {
-  renderEntries();
+async function refresh() {
+  await renderEntries();
   renderBreadcrumbs();
 }
 
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadAllMedia()
-  renderEntries()
-  renderBreadcrumbs()
+  refresh()
 })

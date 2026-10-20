@@ -31,7 +31,8 @@ body {
   padding: 16px 20px;
 }
 
-.player-buttons button {
+.player-buttons button, a {
+  text-decoration: none;
   width: 56px;
   height: 56px;
   border-radius: 50%;         /* круглые */

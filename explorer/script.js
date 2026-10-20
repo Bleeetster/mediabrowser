@@ -131,6 +131,7 @@ async function renderEntries() {
     entryElement.className = "file"
     const entryIconElement = document.createElement("div")
     entryIconElement.className = "file__icon"
+    if (entry.type === "directory") entryIconElement.className = "folder__icon"
     const thumbnail = document.createElement('img');
     thumbnail.src = entry.meta.thumbnail
     entryIconElement.appendChild(thumbnail)

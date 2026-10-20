@@ -1,17 +1,35 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 import fastapi
 import fastapi.responses
 from filesystem import fileSystemControler
 from pydantic import BaseModel
 from thumbnailservice import thumbnailGenerator
 
-app = fastapi.FastAPI()
+fs_controler = fileSystemControler("./media")
+thumbnailGen = thumbnailGenerator("./media")
+
+
+# logic for periodic thumbnail deletion
+@asynccontextmanager
+async def lifespan(app_: fastapi.FastAPI):
+    task = asyncio.create_task(thumbnailGen.clear_cache_loop(3600))  # every hour
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
+app = fastapi.FastAPI(lifespan=lifespan)
 
 app.frontend("/", directory="explorer")
 app.frontend("/player/", directory="player")
 app.frontend("/api/", directory="api")
-
-fs_controler = fileSystemControler("./media")
-thumbnailGen = thumbnailGenerator("./media")
 
 
 class allMedia(BaseModel):

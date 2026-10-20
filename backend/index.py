@@ -1,14 +1,22 @@
 import asyncio
 from contextlib import asynccontextmanager
+import pathlib
 
 import fastapi
 import fastapi.responses
 from filesystem import fileSystemControler
 from pydantic import BaseModel
 from thumbnailservice import thumbnailGenerator
+import tomllib
 
-fs_controler = fileSystemControler("./media")
-thumbnailGen = thumbnailGenerator("./media")
+
+# loading config
+config_path = pathlib.Path(__file__).parent.parent / "config.toml"
+config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+
+
+fs_controler = fileSystemControler(config["path"]["media"])
+thumbnailGen = thumbnailGenerator(config["path"]["media"])
 
 
 # logic for periodic thumbnail deletion

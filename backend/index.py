@@ -52,23 +52,27 @@ class mediaInfo(BaseModel):
     type: str
 
 
-@app.get("/api/mediainfo")
-async def mediainfo(file):
-    stats = fs_controler.getFileInfo(file)
-    print(stats)
-    output = mediaInfo(
-        name=stats["name"],
-        size=stats["size"],
-        modified=stats["modified"],
-        path=stats["path"],
-        type=stats["type"],
-    )
-    return output
+@app.post("/api/mediainfo")
+async def mediainfo(files):
+    return files
+    outputs = {}
+    for file in files:
+        stats = fs_controler.getFileInfo(file)
+        print(stats)
+        output = mediaInfo(
+            name=stats["name"],
+            size=stats["size"],
+            modified=stats["modified"],
+            path=stats["path"],
+            type=stats["type"],
+        )
+        outputs[file] = output
+    return outputs
 
 
 @app.get("/api/loadMedia")
-async def loadMedia():
-    media = fs_controler.loadAllMedia()
+async def loadMedia(directory: str = str(fs_controler.rootDir)):
+    media = fs_controler.loadAllMedia(directory)
     mediaObj = allMedia(files=media)
     print(mediaObj)
     return mediaObj

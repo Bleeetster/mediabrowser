@@ -9,10 +9,7 @@ export class apiFormater {
     try {
       const res = await fetch("/api/loadMedia")
       const resBody = await res.json()
-      const output = new Array();
-      resBody.files.forEach(element => {
-        output.push("/" + element)
-      });
+      const output = new Array(...resBody.files);
       return output
     } catch (error) {
       console.error(error)

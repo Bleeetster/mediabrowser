@@ -34,7 +34,8 @@ async function playMediaFile() {
 
   // using mockfile for now;
   // No you dumbass
-  const mediaInfo = await api.getMediaInfo(currentFilename())
+  const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"))
+  const mediaInfo = mediaTree[currentIndex]
 
   if (mediaInfo.type.includes("video")) {
     const video = document.createElement('video');
@@ -62,7 +63,7 @@ async function loadAllMedia() {
 function findMediaFileInArray() {
   const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"));
   const mediaName = currentFilename();
-  const indexOfCurrentMedia = mediaTree.indexOf(mediaName)
+  const indexOfCurrentMedia = mediaTree.findIndex(media => media.path === mediaName)
   console.log(indexOfCurrentMedia)
 
   if (indexOfCurrentMedia < 0) {
@@ -76,10 +77,10 @@ function goNext() {
   const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"));
   if (currentIndex >= mediaTree.length - 1) return;
   currentIndex += 1
-  const mediaFileName = mediaTree[currentIndex]
+  const mediaFilePath = mediaTree[currentIndex].path
   const search = window.location.search;
   let query = new URLSearchParams(search)
-  query.set("watch", encodeURIComponent(mediaFileName))
+  query.set("watch", encodeURIComponent(mediaFilePath))
   window.location.search = query.toString();
   playMediaFile()
 }
@@ -87,10 +88,10 @@ function goPrevious() {
   const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"));
   if (currentIndex <= 0) return;
   currentIndex -= 1
-  const mediaFileName = mediaTree[currentIndex]
+  const mediaFilePath = mediaTree[currentIndex].path
   const search = window.location.search;
   let query = new URLSearchParams(search)
-  query.set("watch", encodeURIComponent(mediaFileName))
+  query.set("watch", encodeURIComponent(mediaFilePath))
   window.location.search = query.toString();
   playMediaFile()
 }

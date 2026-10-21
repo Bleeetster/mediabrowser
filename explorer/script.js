@@ -9,9 +9,11 @@ function renderBreadcrumbs() {
   const currentDir = getCurrentDirectory();
   let currentDirParts = currentDir.split("/")
   if (currentDir === '/') currentDirParts.pop()
+  else
+    currentDirParts.unshift('')
   currentDirParts.forEach((part, partIndex) => {
     const crumbElement = document.createElement('span');
-    crumbElement.className = "breadCrumbs__item"
+    crumbElement.className = "breadcrumbs__item"
     crumbElement.textContent = part
     if (part === "") crumbElement.textContent = "Home"
     const separator = document.createElement("span")
@@ -46,7 +48,7 @@ async function loadAllMedia() {
 }
 
 function getCurrentDirectory() {
-  return sessionStorage.getItem("CurrentDirectory") || "/"
+  return sessionStorage.getItem("currentDirectory") || "/"
 }
 
 const mockEntry2 = {
@@ -64,7 +66,7 @@ const mockEntry1 = {
   }
 }
 
-async function makeEntriesFromCurrentDir() {
+function makeEntriesFromCurrentDir() {
   const mediaDirectoryRaw = sessionStorage.getItem("mediaDirectory")
   const mediaDirectory = JSON.parse(mediaDirectoryRaw)
   console.log(mediaDirectory)
@@ -83,7 +85,6 @@ async function makeEntriesFromCurrentDir() {
     else
       relativeFile = file
     const partsOfName = relativeFile.split("/")
-    const fileinfo = await api.getMediaInfo(file)
     if (relativeFile.includes("/", 1)) { // removing first /
       const dir = {
         name: partsOfName[1],
@@ -97,24 +98,13 @@ async function makeEntriesFromCurrentDir() {
       dirMap.set(dir.name, dir)
     }
     else {
-      console.log(fileinfo)
-      let size = fileinfo.size
-      const ending = ["B", "kB", "MB", "GB"]
-      let type = 0
-      while (size > 1024 & type < 5) {
-        size /= 1024
-        type += 1
-      }
-      size = String(size).slice(0, 6).padEnd(6)
-      size = `${size} ${ending[type]}`
-      console.log(size)
       const f = {
         name: partsOfName[1],
         path: currentDir + partsOfName[1],
         type: "media",
         meta: {
-          size: size, // add size from backend
-          thumbnail: "/api/thumbnail?file=" + encodeURIComponent(fileinfo.path) // add thumbnail from backend
+          size: 0, // add size from backend
+          thumbnail: "/api/thumbnail?file="
         }
       }
       fileMap.set(f.name, f)
@@ -124,51 +114,99 @@ async function makeEntriesFromCurrentDir() {
 }
 
 async function renderEntries() {
+  const mediaDirectory = JSON.parse(sessionStorage.getItem("mediaDirectory"))
+  let currentDirectory = getCurrentDirectory()
+  if (currentDirectory === "/")
+    currentDirectory = ""
+  let entry
   filesDiv.replaceChildren();
-  const entries = await makeEntriesFromCurrentDir();
-  for (let entry of entries) {
-    const entryElement = document.createElement("a");
-    entryElement.className = "file"
-    const entryIconElement = document.createElement("div")
-    entryIconElement.className = "file__icon"
-    if (entry.type === "directory") entryIconElement.className = "folder__icon"
-    const thumbnail = document.createElement('img');
-    thumbnail.src = entry.meta.thumbnail
-    entryIconElement.appendChild(thumbnail)
-    entryElement.appendChild(entryIconElement)
+  const dirSet = new Set()
+  for (const media of mediaDirectory) {
+    if (!media.path.includes(currentDirectory)) continue
+    let file = media.path.slice(currentDirectory.length)
+    if (file[0] === "/")
+      file = file.slice(1)
+    if (file.includes("/")) {
+      // it is a directory
+      const dirname = file.slice(0, file.indexOf("/"))
+      if (dirSet.has(dirname)) continue
+      dirSet.add(dirname)
+      let path
+      if (currentDirectory)
+        path = currentDirectory + "/" + dirname
+      else
+        path = dirname
+      const containerSet = new Set()
+      mediaDirectory.forEach((elem) => {
+        if (!elem.path.startsWith(path)) return;
+        let elemName = elem.path.slice(path.length)
+        if (elemName[0] === "/") elemName = elemName.slice(1)
+        if (elemName.includes("/"))
+          containerSet.add(elemName.slice(0, elemName.indexOf("/")))
+        else
+          containerSet.add(elemName)
 
-    const entryNameElement = document.createElement("div")
-    entryNameElement.className = "file__name"
-    entryNameElement.textContent = entry.name
-    entryElement.appendChild(entryNameElement)
-
-    const entryMetaElement = document.createElement("div")
-    entryMetaElement.className = "file__meta"
-    if (entry.meta.size) {
-      // const sizes = ["", "KB", "MB", "GB"]
-      // const sizeText = entry.meta.size / 1024
-      entryMetaElement.textContent = "Size: " + entry.meta.size
+      })
+      entry = {
+        name: dirname,
+        type: "directory",
+        path: path,
+        amountOfFiles: containerSet.size,
+        thumbnail: "./favicon.ico"
+      }
     }
     else {
-      entryMetaElement.textContent = entry.meta.amountOfFiles + " files"
+      // it is a media file
+      entry = {
+        name: media.name,
+        type: "media",
+        path: media.path,
+        size: media.size,
+        thumbnail: "/api/thumbnail?file=" + encodeURIComponent(media.path)
+      }
     }
-    entryElement.appendChild(entryMetaElement)
+    const entryElement = document.createElement("a")
+    entryElement.className = "file"
+    const path = entry.path
+    if (entry.type === "directory") entryElement.addEventListener('click', () => { goTo(path) })
+    else entryElement.href = "/player?watch=" + encodeURIComponent(path)
 
-    filesDiv.appendChild(entryElement)
-    if (entry.type === "directory") entryElement.addEventListener("click", () => { goTo(entry.path) })
-    else (
-      entryElement.href = "player?watch=" + encodeURIComponent(entry.path)
-    )
+    const entryThumbnail = document.createElement('img')
+    entryThumbnail.src = entry.thumbnail
+    entryThumbnail.loading = "lazy"
+    entryThumbnail.className = entry.type === "directory" ? "file__icon--folder" : "file__icon"
+
+    const entryName = document.createElement("div")
+    entryName.className = "file__name"
+    entryName.textContent = entry.name
+
+    const entryMeta = document.createElement("div")
+    entryMeta.className = "file__meta"
+    if (entry.type === "media") {
+      let size = entry.size
+      let types = ["B", "kB", "MB", "GB"]
+      let type = 0
+      while (size > 1024 & type < types.length - 1) {
+        size /= 1024
+        type += 1
+      }
+      entryMeta.textContent = "Size: " + String(size).slice(0, 6).padEnd(6) + " " + types[type]
+    }
+    else {
+      entryMeta.textContent = entry.amountOfFiles + " elements"
+    }
+
+    entryElement.append(entryThumbnail, entryName, entryMeta)
+    filesDiv.append(entryElement)
   }
 }
-
 function goTo(directory) {
-  sessionStorage.setItem("CurrentDirectory", directory);
+  sessionStorage.setItem("currentDirectory", directory);
   refresh()
 }
 
-async function refresh() {
-  await renderEntries();
+function refresh() {
+  renderEntries();
   renderBreadcrumbs();
 }
 

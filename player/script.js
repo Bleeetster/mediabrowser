@@ -34,22 +34,31 @@ async function playMediaFile() {
 
   // using mockfile for now;
   // No you dumbass
-  const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"))
+  const mediaTree = JSON.parse(localStorage.getItem("mediaDirectory"))
   const mediaInfo = mediaTree[currentIndex]
+  bottomBar.textContent = mediaInfo.name
+  sessionStorage.setItem("currentDirectory", mediaInfo.path.slice(0, -1 * mediaInfo.name.length - 1))
+  sessionStorage.setItem("currentMedia", mediaInfo.name)
 
   if (mediaInfo.type.includes("video")) {
-    const video = document.createElement('video');
+    let video = document.querySelector("video")
+    if (!video) {
+      video = document.createElement('video');
+      mediaContainer.replaceChildren(video)
+    }
+    video.src = '/api/media?file=' + encodeURIComponent(mediaInfo.path)
     video.controls = true;
     video.autoplay = true;
     video.defaultMuted = false;
     video.loop = true;
-    video.src = '/api/media?file=' + encodeURIComponent(mediaInfo.path)
-    mediaContainer.replaceChildren(video)
   }
   else {
-    const image = document.createElement('img')
-    image.src = '/api/media?file=' + encodeURIComponent(mediaInfo.path)
-    mediaContainer.replaceChildren(image)
+    const src = '/api/media?file=' + encodeURIComponent(mediaInfo.path)
+    const image = new Image()
+    image.onload = () => {
+      mediaContainer.replaceChildren(image)
+    }
+    image.src = src
   }
 }
 
@@ -57,11 +66,11 @@ async function playMediaFile() {
 
 async function loadAllMedia() {
   const mediaDirectory = await api.loadAllMedia()
-  sessionStorage.setItem("mediaDirectory", JSON.stringify(mediaDirectory))
+  localStorage.setItem("mediaDirectory", JSON.stringify(mediaDirectory))
 }
 
 function findMediaFileInArray() {
-  const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"));
+  const mediaTree = JSON.parse(localStorage.getItem("mediaDirectory"));
   const mediaName = currentFilename();
   const indexOfCurrentMedia = mediaTree.findIndex(media => media.path === mediaName)
   console.log(indexOfCurrentMedia)
@@ -74,30 +83,31 @@ function findMediaFileInArray() {
 
 
 function goNext() {
-  const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"));
+  const mediaTree = JSON.parse(localStorage.getItem("mediaDirectory"));
   if (currentIndex >= mediaTree.length - 1) return;
   currentIndex += 1
   const mediaFilePath = mediaTree[currentIndex].path
   const search = window.location.search;
   let query = new URLSearchParams(search)
   query.set("watch", encodeURIComponent(mediaFilePath))
-  window.location.search = query.toString();
+  console.log(query.toString())
+  history.pushState({ path: query.toString() }, '', '?' + query.toString())
   playMediaFile()
 }
 function goPrevious() {
-  const mediaTree = JSON.parse(sessionStorage.getItem("mediaDirectory"));
+  const mediaTree = JSON.parse(localStorage.getItem("mediaDirectory"));
   if (currentIndex <= 0) return;
   currentIndex -= 1
   const mediaFilePath = mediaTree[currentIndex].path
   const search = window.location.search;
   let query = new URLSearchParams(search)
   query.set("watch", encodeURIComponent(mediaFilePath))
-  window.location.search = query.toString();
+  history.pushState({ path: query.toString() }, '', '?' + query.toString())
   playMediaFile()
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadAllMedia()
+document.addEventListener("DOMContentLoaded", () => {
+  loadAllMedia()
   currentIndex = findMediaFileInArray();
   playMediaFile();
   nextButton.addEventListener("click", goNext)

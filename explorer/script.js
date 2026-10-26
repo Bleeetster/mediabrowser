@@ -1,7 +1,11 @@
 import { apiFormater } from "/api/apiFormater.js";
 
+const LOAD = 100
+const CURRENT_DIR_KEY = "currentDirectoryData"
 const filesDiv = document.getElementsByClassName("files")[0];
 const breadcrumbsNav = document.getElementsByClassName("breadcrumbs")[0]
+const menuBtn = document.querySelector('.menu-btn')
+const overlay = document.getElementsByClassName("sidebar-overlay")[0]
 const api = new apiFormater()
 
 function renderBreadcrumbs() {
@@ -41,10 +45,11 @@ function renderBreadcrumbs() {
   })
 }
 
-async function loadAllMedia() {
-  const mediaDirectory = await api.loadAllMedia()
+async function loadAllMedia(start, end) {
+  const currentDirectory = getCurrentDirectory()
+  const mediaDirectory = await api.loadMediaDir(currentDirectory, start, end)
   const MDjson = JSON.stringify(mediaDirectory)
-  sessionStorage.setItem("mediaDirectory", MDjson)
+  localStorage.setItem(CURRENT_DIR_KEY, MDjson)
 }
 
 function getCurrentDirectory() {
@@ -66,60 +71,13 @@ const mockEntry1 = {
   }
 }
 
-function makeEntriesFromCurrentDir() {
-  const mediaDirectoryRaw = sessionStorage.getItem("mediaDirectory")
-  const mediaDirectory = JSON.parse(mediaDirectoryRaw)
-  console.log(mediaDirectory)
-  // const mediaDirectory = new Array("/media/file.mp4", "/file.mp4", "/media/another/wowSoMuchMedia/supersecretphoto.jpeg", "/file2.mp4", "/photo.jpeg")
-  const currentDirectory = getCurrentDirectory()
-  const filesFromCurrentDirectory = mediaDirectory.filter(file => file.startsWith(currentDirectory))
-  const dirMap = new Map()
-  const fileMap = new Map()
-  let relativeFile
-  let currentDir = currentDirectory
-  for (const file of filesFromCurrentDirectory) {
-    if (currentDirectory != "/") {
-      relativeFile = file.slice(currentDirectory.length)
-      currentDir = currentDirectory + "/"
-    }
-    else
-      relativeFile = file
-    const partsOfName = relativeFile.split("/")
-    if (relativeFile.includes("/", 1)) { // removing first /
-      const dir = {
-        name: partsOfName[1],
-        path: currentDir + partsOfName[1],
-        type: "directory",
-        meta: {
-          amountOfFiles: filesFromCurrentDirectory.filter(f => f.includes(file)).length,
-          thumbnail: "./favicon.ico"
-        }
-      }
-      dirMap.set(dir.name, dir)
-    }
-    else {
-      const f = {
-        name: partsOfName[1],
-        path: currentDir + partsOfName[1],
-        type: "media",
-        meta: {
-          size: 0, // add size from backend
-          thumbnail: "/api/thumbnail?file="
-        }
-      }
-      fileMap.set(f.name, f)
-    }
-  }
-  return new Array(...dirMap.values(), ...fileMap.values())
-}
 
 async function renderEntries() {
-  const mediaDirectory = JSON.parse(sessionStorage.getItem("mediaDirectory"))
+  const mediaDirectory = JSON.parse(localStorage.getItem(CURRENT_DIR_KEY))
   let currentDirectory = getCurrentDirectory()
   if (currentDirectory === "/")
     currentDirectory = ""
   let entry
-  filesDiv.replaceChildren();
   const dirSet = new Set()
   for (const media of mediaDirectory) {
     if (!media.path.includes(currentDirectory)) continue
@@ -165,20 +123,25 @@ async function renderEntries() {
         thumbnail: "/api/thumbnail?file=" + encodeURIComponent(media.path)
       }
     }
+    const entryContainer = document.createElement("li")
     const entryElement = document.createElement("a")
     entryElement.className = "file"
+    entryContainer.appendChild(entryElement)
     const path = entry.path
     if (entry.type === "directory") entryElement.addEventListener('click', () => { goTo(path) })
     else entryElement.href = "/player?watch=" + encodeURIComponent(path)
 
+    const entryThumbnailDiv = document.createElement('div')
+    entryThumbnailDiv.className = entry.type === "directory" ? "file__icon--folder" : "file__icon"
     const entryThumbnail = document.createElement('img')
     entryThumbnail.src = entry.thumbnail
     entryThumbnail.loading = "lazy"
-    entryThumbnail.className = entry.type === "directory" ? "file__icon--folder" : "file__icon"
+    entryThumbnailDiv.append(entryThumbnail)
 
     const entryName = document.createElement("div")
     entryName.className = "file__name"
     entryName.textContent = entry.name
+    entryName.title = entry.name
 
     const entryMeta = document.createElement("div")
     entryMeta.className = "file__meta"
@@ -196,8 +159,8 @@ async function renderEntries() {
       entryMeta.textContent = entry.amountOfFiles + " elements"
     }
 
-    entryElement.append(entryThumbnail, entryName, entryMeta)
-    filesDiv.append(entryElement)
+    entryElement.append(entryThumbnailDiv, entryName, entryMeta)
+    filesDiv.append(entryContainer)
   }
 }
 function goTo(directory) {
@@ -205,13 +168,37 @@ function goTo(directory) {
   refresh()
 }
 
+function getOffset() {
+  return sessionStorage.getItem("offset") || 0
+}
+function setOffset(value) {
+  sessionStorage.setItem("offset", value)
+}
+
 function refresh() {
-  renderEntries();
+  const offset = getOffset()
+  filesDiv.querySelectorAll('img').forEach((elem) => {
+    elem.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+    elem.removeAttribute('src')
+  })
+  filesDiv.replaceChildren();
+  loadAllMedia(offset, LOAD).then(renderEntries)
+    .then(() => {
+      const curMedia = sessionStorage.getItem("currentMedia")
+      const curMediaCard = [...document.querySelectorAll('.file__name').values()].find(elem => elem.textContent === curMedia) || 0
+      curMediaCard.scrollIntoView({ block: "center" })
+    })
   renderBreadcrumbs();
 }
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+  menuBtn.addEventListener('click', () => {
+    document.body.classList.toggle('is-drawer-open')
+  })
+  overlay.addEventListener('click', () => {
+    document.body.classList.remove('is-drawer-open');
+  });
   await loadAllMedia()
   refresh()
 })

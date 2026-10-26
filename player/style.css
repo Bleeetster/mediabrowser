@@ -6,7 +6,8 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -14,6 +15,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   background: #1a1a1a;
   color: #f0f0f0;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -26,16 +28,19 @@ body {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;   /* prev/next group centered */
+  justify-content: center;
+  /* prev/next group centered */
   gap: 16px;
   padding: 16px 20px;
 }
 
-.player-buttons button, a {
+.player-buttons button,
+.player-buttons a {
   text-decoration: none;
   width: 56px;
   height: 56px;
-  border-radius: 50%;         /* круглые */
+  border-radius: 50%;
+  /* круглые */
   border: none;
   background: #2e2e2e;
   color: #f0f0f0;
@@ -48,7 +53,8 @@ body {
   transition: background 0.2s, transform 0.15s;
 }
 
-.player-buttons button:hover {
+.player-buttons button:hover,
+.player-buttons a:hover {
   background: #3f3f3f;
 }
 
@@ -69,11 +75,13 @@ body {
 
 /* ============ MIDDLE SECTION ============ */
 .media-container {
-  flex: 1 1 auto;             /* занимает всю доступную область */
+  flex: 1 1 auto;
+  /* занимает всю доступную область */
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;              /* важно для корректного flex-shrink */
+  min-height: 0;
+  /* важно для корректного flex-shrink */
   background: #0d0d0d;
   overflow: hidden;
 }
@@ -82,7 +90,6 @@ body {
 .media-container video {
   max-width: 100%;
   max-height: 100%;
-  height: 90vh;
   object-fit: contain;
   display: block;
 }
@@ -103,4 +110,53 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .player-buttons {
+    padding: 10px 14px;
+    gap: 12px;
+  }
+
+  .player-buttons button,
+  .player-buttons a {
+    width: 44px;
+    height: 44px;
+    font-size: 12px;
+  }
+
+  .btn-back {
+    left: 14px;
+  }
+
+  .bottom-bar {
+    padding: 10px 14px;
+  }
+
+  .bottom-bar p {
+    font-size: 14px;
+  }
+}
+
+/* Телефон в горизонте: вертикали мало — жмём кнопки ещё сильнее */
+@media (max-height: 500px) and (orientation: landscape) {
+  .player-buttons {
+    padding: 6px 14px;
+    gap: 10px;
+  }
+
+  .player-buttons button,
+  .player-buttons a {
+    width: 38px;
+    height: 38px;
+    font-size: 11px;
+  }
+
+  .bottom-bar {
+    padding: 6px 14px;
+  }
+
+  .bottom-bar p {
+    font-size: 13px;
+  }
 }

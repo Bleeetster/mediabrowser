@@ -9,7 +9,7 @@ class thumbnailGenerator:
     def __init__(self, root: str):
         if not self.check_for_ffmpeg():
             raise shutil.Error("THERE_IS_NO_FFMPEG_IN_PATH")
-        self.LONG_VIDEO_THRESHOLD = 600
+        self.LONG_VIDEO_THRESHOLD = 60
         self.rootDir = pathlib.Path(root)
         self.base_dir = pathlib.Path(__file__).resolve().parent
         self.dest = self.base_dir / "thumbnail"
@@ -62,8 +62,8 @@ class thumbnailGenerator:
             thumbnailPath = dest / f"{pathlib.Path(path).name}_thumbnail.gif"
 
             vf = (
-                "fps=10,"
-                "scale=320:180:flags=lanczos,"
+                "fps=6,"
+                "scale=240:-2:flags=lanczos,"
                 "split[s0][s1];"
                 "[s0]palettegen=stats_mode=diff[p];"
                 "[s1][p]paletteuse=dither=bayer:bayer_scale=5"
@@ -87,11 +87,11 @@ class thumbnailGenerator:
             duration = self.get_duration(path)
             print("duration", duration)
             if duration is None or duration < self.LONG_VIDEO_THRESHOLD:
-                vf = "thumbnail,scale=320:180:force_original_aspect_ratio=increase,crop=320:180"
+                vf = "thumbnail,scale=240:135:force_original_aspect_ratio=increase,crop=240:135"
                 ss_args = []
             else:
                 ts = 60
-                vf = "scale=320:180:force_original_aspect_ratio=increase,crop=320:180"
+                vf = "scale=240:135:force_original_aspect_ratio=increase,crop=240:135"
                 ss_args = ["-ss", f"{ts:.3f}"]
             cmd = [
                 "ffmpeg",
@@ -107,7 +107,7 @@ class thumbnailGenerator:
                 "-vf",
                 vf,
                 "-q:v",
-                "3",
+                "8",
                 str(thumbnailPath),
             ]
             print("cmd", cmd)

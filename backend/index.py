@@ -39,6 +39,8 @@ app.frontend("/", directory="explorer")
 app.frontend("/player/", directory="player")
 app.frontend("/api/", directory="api")
 
+print(fs_controler.loadAllMedia(fs_controler.rootDir))
+
 
 class allMedia(BaseModel):
     files: object
@@ -71,12 +73,17 @@ async def mediainfo(files):
 
 
 @app.get("/api/loadMedia")
-async def loadMedia(directory: str = str(fs_controler.rootDir)):
-    media = fs_controler.loadAllMedia(directory)
+async def loadMedia(directory: str = str(fs_controler.rootDir), start = 0, end = 100):
+    media = fs_controler.loadAllMedia(directory, start, end)
     mediaObj = allMedia(files=media)
     print(mediaObj)
     return mediaObj
 
+@app.get('/api/loadMedia/navigate')
+async def loadMediaNavigate(directory: str, start = 0, end = 100):
+    resp = fs_controler.loadCurrentMedia(directory, start, end)
+    mediaObj = allMedia(files=resp)
+    return mediaObj
 
 @app.get("/api/media")
 async def media(file):

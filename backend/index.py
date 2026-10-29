@@ -44,6 +44,7 @@ print(fs_controler.loadAllMedia(fs_controler.rootDir))
 
 class allMedia(BaseModel):
     files: object
+    total: int
 
 
 class mediaInfo(BaseModel):
@@ -73,16 +74,22 @@ async def mediainfo(files):
 
 
 @app.get("/api/loadMedia")
-async def loadMedia(directory: str = str(fs_controler.rootDir), start = 0, end = 100):
-    media = fs_controler.loadAllMedia(directory, start, end)
-    mediaObj = allMedia(files=media)
+async def loadMedia(medianame: str = str(fs_controler.rootDir), start = 0, end = 100):
+    media = fs_controler.loadAllMedia(medianame, start, end)
+    mediaObj = allMedia(
+        files=media[1],
+        total=media[0]
+    )
     print(mediaObj)
     return mediaObj
 
 @app.get('/api/loadMedia/navigate')
 async def loadMediaNavigate(directory: str, start = 0, end = 100):
     resp = fs_controler.loadCurrentMedia(directory, start, end)
-    mediaObj = allMedia(files=resp)
+    mediaObj = allMedia(
+        files=resp[1],
+        total=resp[0]
+    )
     return mediaObj
 
 @app.get("/api/media")

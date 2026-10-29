@@ -6,7 +6,9 @@ const filesDiv = document.getElementsByClassName("files")[0];
 const breadcrumbsNav = document.getElementsByClassName("breadcrumbs")[0]
 const menuBtn = document.querySelector('.menu-btn')
 const overlay = document.getElementsByClassName("sidebar-overlay")[0]
+const sentinel = document.querySelector('.sentinel')
 const api = new apiFormater()
+
 
 function renderBreadcrumbs() {
   breadcrumbsNav.replaceChildren()
@@ -28,12 +30,12 @@ function renderBreadcrumbs() {
     crumbElement.addEventListener('click', () => {
       let directory = currentDirParts.slice(0, currentDirParts.indexOf(part) + 1)
       console.log(directory.join('/') || '/')
-      goTo(directory.join('/') || '/')
+      goTo(directory.join('/').slice(1) || '/')
     })
 
     if (partIndex === currentDirParts.length - 1) {
       crumbElement.className += " breadcrumbs__item--current"
-      const amountOfFiles = filesDiv.getElementsByClassName("file").length
+      const amountOfFiles = sessionStorage.getItem("total")
       const toolbar = document.getElementsByClassName("toolbar__title")[0];
       const toolbarCount = toolbar.getElementsByClassName("toolbar__count")[0];
       toolbar.textContent = crumbElement.textContent
@@ -43,13 +45,15 @@ function renderBreadcrumbs() {
       breadcrumbsNav.appendChild(separator)
     }
   })
+  breadcrumbsNav.scrollLeft = breadcrumbsNav.scrollWidth
 }
 
 async function loadAllMedia(start, end) {
   const currentDirectory = getCurrentDirectory()
   const mediaDirectory = await api.loadMediaDir(currentDirectory, start, end)
-  const MDjson = JSON.stringify(mediaDirectory)
-  localStorage.setItem(CURRENT_DIR_KEY, MDjson)
+  const MDjson = JSON.stringify(mediaDirectory.files)
+  sessionStorage.setItem("total", mediaDirectory.total)
+  sessionStorage.setItem(CURRENT_DIR_KEY, MDjson)
 }
 
 function getCurrentDirectory() {
@@ -73,7 +77,8 @@ const mockEntry1 = {
 
 
 async function renderEntries() {
-  const mediaDirectory = JSON.parse(localStorage.getItem(CURRENT_DIR_KEY))
+  const mediaDirectory = JSON.parse(sessionStorage.getItem(CURRENT_DIR_KEY))
+  console.log(mediaDirectory)
   let currentDirectory = getCurrentDirectory()
   if (currentDirectory === "/")
     currentDirectory = ""
@@ -94,22 +99,12 @@ async function renderEntries() {
         path = currentDirectory + "/" + dirname
       else
         path = dirname
-      const containerSet = new Set()
-      mediaDirectory.forEach((elem) => {
-        if (!elem.path.startsWith(path)) return;
-        let elemName = elem.path.slice(path.length)
-        if (elemName[0] === "/") elemName = elemName.slice(1)
-        if (elemName.includes("/"))
-          containerSet.add(elemName.slice(0, elemName.indexOf("/")))
-        else
-          containerSet.add(elemName)
-
-      })
+      const resp = await api.loadMediaDir(path)
       entry = {
         name: dirname,
         type: "directory",
         path: path,
-        amountOfFiles: containerSet.size,
+        amountOfFiles: resp.total,
         thumbnail: "./favicon.ico"
       }
     }
@@ -163,32 +158,49 @@ async function renderEntries() {
     filesDiv.append(entryContainer)
   }
 }
+
 function goTo(directory) {
   sessionStorage.setItem("currentDirectory", directory);
   refresh()
 }
 
-function getOffset() {
-  return sessionStorage.getItem("offset") || 0
-}
-function setOffset(value) {
-  sessionStorage.setItem("offset", value)
-}
 
-function refresh() {
-  const offset = getOffset()
+async function refresh() {
   filesDiv.querySelectorAll('img').forEach((elem) => {
     elem.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
     elem.removeAttribute('src')
   })
   filesDiv.replaceChildren();
-  loadAllMedia(offset, LOAD).then(renderEntries)
-    .then(() => {
-      const curMedia = sessionStorage.getItem("currentMedia")
-      const curMediaCard = [...document.querySelectorAll('.file__name').values()].find(elem => elem.textContent === curMedia) || 0
-      curMediaCard.scrollIntoView({ block: "center" })
-    })
-  renderBreadcrumbs();
+  let offset = 0
+  await loadAllMedia(offset, LOAD)
+  const total = sessionStorage.getItem("total")
+  if (offset + LOAD <= total)
+    sentinel.classList.add("loading")
+  else
+    sentinel.classList.remove("loading")
+  await renderEntries()
+  const observer = new IntersectionObserver((entry) => {
+    if (entry[0].isIntersecting) {
+      observer.disconnect(entry[0])
+      console.log("observer disconnected")
+      offset = offset + LOAD
+      if (offset >= total) {
+        sentinel.classList.remove("loading")
+      } else
+        loadAllMedia(offset, offset + LOAD)
+          .then(() => {
+            renderEntries().then(() => { observer.observe(sentinel); console.log("observer is connected") })
+          })
+    }
+  })
+  observer.observe(sentinel)
+  renderBreadcrumbs()
+}
+
+function comeback() {
+  const curMedia = sessionStorage.getItem("currentMedia")
+  const curMediaCard = [...document.querySelectorAll('.file__name').values()].find(elem => elem.textContent === curMedia) || 0
+  curMediaCard.scrollIntoView({ block: "center" })
 }
 
 
@@ -199,6 +211,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   overlay.addEventListener('click', () => {
     document.body.classList.remove('is-drawer-open');
   });
-  await loadAllMedia()
   refresh()
 })

@@ -63,7 +63,7 @@ class thumbnailGenerator:
 
             vf = (
                 "fps=6,"
-                "scale=240:-2:flags=lanczos,"
+                "scale=160:90:flags=lanczos,"
                 "split[s0][s1];"
                 "[s0]palettegen=stats_mode=diff[p];"
                 "[s1][p]paletteuse=dither=bayer:bayer_scale=5"
@@ -87,11 +87,11 @@ class thumbnailGenerator:
             duration = self.get_duration(path)
             print("duration", duration)
             if duration is None or duration < self.LONG_VIDEO_THRESHOLD:
-                vf = "thumbnail,scale=240:135:force_original_aspect_ratio=increase,crop=240:135"
+                vf = "thumbnail,scale=160:90:force_original_aspect_ratio=increase,crop=160:90"
                 ss_args = []
             else:
                 ts = 60
-                vf = "scale=240:135:force_original_aspect_ratio=increase,crop=240:135"
+                vf = "scale=160:90:force_original_aspect_ratio=increase,crop=160:90"
                 ss_args = ["-ss", f"{ts:.3f}"]
             cmd = [
                 "ffmpeg",
@@ -107,7 +107,7 @@ class thumbnailGenerator:
                 "-vf",
                 vf,
                 "-q:v",
-                "8",
+                "15",
                 str(thumbnailPath),
             ]
             print("cmd", cmd)

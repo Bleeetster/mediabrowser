@@ -1,16 +1,9 @@
 export class apiFormater {
-  // TODO: media endpoint
-  // media info endpoint
-  // load all media endpoint
-  // optional:
-  // thumbnails endpoint
 
-  async loadAllMedia(start = 0, end = 100) {
+  async loadAllMedia(media, start = 0, end = 100) {
     try {
-      const res = await fetch(`/api/loadMedia?start=${start}&end=${end}`)
-      const resBody = await res.json()
-      const output = new Array(...resBody.files);
-      return output
+      const res = await fetch(`/api/loadMedia?medianame=${media}&start=${start}&end=${end}`)
+      return await this.loadMedia(res, start, end)
     } catch (error) {
       console.error(error)
       throw Error("COULD_NOT_FETCH_FROM_BACKEND")
@@ -19,12 +12,20 @@ export class apiFormater {
   async loadMediaDir(directory, start = 0, end = 100) {
     try {
       const res = await fetch(`/api/loadMedia/navigate?directory=${encodeURIComponent(directory)}&start=${start}&end=${end}`)
-      const resBody = await res.json()
-      const output = new Array(...resBody.files)
-      return output
+      return await this.loadMedia(res, start, end)
     } catch (error) {
       console.error(error)
       throw Error("COULD_NOT_FETCH_FROM_BACKEND")
+    }
+  }
+
+  async loadMedia(response, start, end) {
+    const resBody = await response.json()
+    const files = resBody.files
+    const total = resBody.total
+    return {
+      files: files,
+      total: total,
     }
   }
   async getMediaInfo(path) {

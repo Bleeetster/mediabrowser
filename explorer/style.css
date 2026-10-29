@@ -30,7 +30,7 @@
     background: var(--bg);
     color: var(--text);
     display: grid;
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 260px minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
       "sidebar header"
@@ -148,6 +148,7 @@
     align-items: center;
     gap: 16px;
     padding: 14px 22px;
+    min-width: 0;
   }
 
   .menu-btn {
@@ -185,6 +186,7 @@
 
   .breadcrumbs__item {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
@@ -392,9 +394,20 @@
     scrollbar-color: #262b36 transparent;
   }
 
+  .sentinel.loading {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    padding: 1rem;
+  }
+
+  .sentinel {
+    display: none;
+  }
+
   @media (max-width: 820px) {
     body {
-      grid-template-columns: 0 1fr;
+      grid-template-columns: 0 minmax(0, 1fr);
     }
 
     .menu-btn {
